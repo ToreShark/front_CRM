@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  frontend:
+    build: .
+    container_name: legal-system-frontend
+    ports:
+      - "80:80"
+    restart: unless-stopped
+    environment:
+      - NGINX_HOST=localhost
+      - NGINX_PORT=80
+    volumes:
+      # Опционально: для логов nginx
+      - ./logs:/var/log/nginx
+    networks:
+      - frontend-network
+
+networks:
+  frontend-network:
+    driver: bridge
