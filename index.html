@@ -717,6 +717,21 @@
             document.getElementById('editModal').style.display = 'block';
         }
 
+        // 🗑️ Удаление дела  
+        async function deleteCase(caseId) {
+            if (!confirm('Вы уверены, что хотите удалить это дело?')) {
+                return;
+            }
+            
+            try {
+                await apiRequest(`/cases/${caseId}`, { method: 'DELETE' });
+                await loadCases();
+                showNotification('Дело успешно удалено!', 'success');
+            } catch (error) {
+                console.error('❌ Ошибка удаления дела:', error);
+                showNotification('Ошибка удаления дела: ' + error.message, 'error');
+            }
+        }
         // 💾 Обработка формы редактирования
         document.getElementById('editForm').addEventListener('submit', async function(e) {
             e.preventDefault();
@@ -782,6 +797,9 @@
                     <td>
                         <button class="btn" style="padding: 5px 10px; font-size: 12px;" onclick="editCase(${caseItem.id})">
                             Изменить
+                        </button>
+                        <button class="btn btn-danger" style="padding: 5px 10px; font-size: 12px; margin-left: 5px;" onclick="deleteCase(${caseItem.id})">
+                            Удалить
                         </button>
                     </td>
                 `;
