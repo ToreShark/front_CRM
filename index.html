@@ -545,7 +545,8 @@
                 auth: '/auth/telegram',
                 me: '/auth/me',
                 cases: '/cases',
-                users: '/users'
+                users: '/users',
+                teamFilters: '/team-filters'
             }
         };
 
@@ -613,7 +614,8 @@
         async function loadInitialData() {
             await Promise.all([
                 loadUsers(),
-                loadCases()
+                loadCases(),
+                loadTeamFilters()
             ]);
             updateStats();
             setupFilters();
@@ -638,6 +640,44 @@
             } catch (error) {
                 console.error('❌ Ошибка загрузки дел:', error);
                 showNotification('Ошибка загрузки дел: ' + error.message, 'error');
+            }
+        }
+
+        // 🔍 Загрузка текущих фильтров команды
+        async function loadTeamFilters() {
+            try {
+                const teamFilters = await apiRequest('/team-filters');
+                
+                // Устанавливаем значения фильтров на фронтенде согласно серверным
+                document.getElementById('statusFilter').value = teamFilters.status_filter || '';
+                document.getElementById('responsibleFilter').value = teamFilters.responsible_id || '';
+                
+                console.log('✅ Фильтры команды загружены:', teamFilters);
+            } catch (error) {
+                console.error('❌ Ошибка загрузки фильтров команды:', error);
+            }
+        }
+
+        // 💾 Сохранение фильтров на сервер
+        async function saveTeamFilters() {
+            try {
+                const filterData = {
+                    status_filter: document.getElementById('statusFilter').value || null,
+                    responsible_id: parseInt(document.getElementById('responsibleFilter').value) || null,
+                };
+                
+                await apiRequest('/team-filters', {
+                    method: 'PATCH',
+                    body: JSON.stringify(filterData)
+                });
+                
+                // После сохранения фильтров - перезагружаем дела
+                await loadCases();
+                
+                console.log('✅ Фильтры команды сохранены:', filterData);
+            } catch (error) {
+                console.error('❌ Ошибка сохранения фильтров:', error);
+                showNotification('Ошибка сохранения фильтров: ' + error.message, 'error');
             }
         }
 
@@ -846,37 +886,75 @@
         }
 
         // 🔍 Настройка фильтров
+        // function setupFilters() {
+        //     const searchInput = document.getElementById('searchInput');
+        //     const statusFilter = document.getElementById('statusFilter');
+        //     const responsibleFilter = document.getElementById('responsibleFilter');
+
+        //     function applyFilters() {
+        //         let filtered = allCases;
+
+        //         const searchTerm = searchInput.value.toLowerCase();
+        //         if (searchTerm) {
+        //             filtered = filtered.filter(c => 
+        //                 c.number.toLowerCase().includes(searchTerm) ||
+        //                 c.title.toLowerCase().includes(searchTerm) ||
+        //                 (c.responsible?.name || '').toLowerCase().includes(searchTerm)
+        //             );
+        //         }
+
+        //         if (statusFilter.value) {
+        //             filtered = filtered.filter(c => c.status === statusFilter.value);
+        //         }
+
+        //         if (responsibleFilter.value) {
+        //             filtered = filtered.filter(c => c.responsible?.id === parseInt(responsibleFilter.value));
+        //         }
+
+        //         renderCases(filtered);
+        //     }
+
+        //     searchInput.addEventListener('input', applyFilters);
+        //     statusFilter.addEventListener('change', applyFilters);
+        //     responsibleFilter.addEventListener('change', applyFilters);
+        // }
+
+        // 🔍 Настройка фильтров
         function setupFilters() {
             const searchInput = document.getElementById('searchInput');
             const statusFilter = document.getElementById('statusFilter');
             const responsibleFilter = document.getElementById('responsibleFilter');
 
-            function applyFilters() {
-                let filtered = allCases;
+            // Поиск остается локальным (работает быстро)
+            searchInput.addEventListener('input', function() {
+                applyLocalSearch();
+            });
 
-                const searchTerm = searchInput.value.toLowerCase();
-                if (searchTerm) {
-                    filtered = filtered.filter(c => 
-                        c.number.toLowerCase().includes(searchTerm) ||
-                        c.title.toLowerCase().includes(searchTerm) ||
-                        (c.responsible?.name || '').toLowerCase().includes(searchTerm)
-                    );
-                }
+            // Фильтры статуса и ответственного теперь сохраняются на сервере
+            statusFilter.addEventListener('change', function() {
+                saveTeamFilters(); // Сохраняем на сервер и перезагружаем дела
+            });
 
-                if (statusFilter.value) {
-                    filtered = filtered.filter(c => c.status === statusFilter.value);
-                }
+            responsibleFilter.addEventListener('change', function() {
+                saveTeamFilters(); // Сохраняем на сервер и перезагружаем дела
+            });
+        }
 
-                if (responsibleFilter.value) {
-                    filtered = filtered.filter(c => c.responsible?.id === parseInt(responsibleFilter.value));
-                }
-
-                renderCases(filtered);
+        // 🔍 Локальный поиск (работает с уже загруженными и отфильтрованными делами)
+        function applyLocalSearch() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            
+            let filtered = allCases;
+            
+            if (searchTerm) {
+                filtered = filtered.filter(c => 
+                    c.number.toLowerCase().includes(searchTerm) ||
+                    c.title.toLowerCase().includes(searchTerm) ||
+                    (c.responsible?.name || '').toLowerCase().includes(searchTerm)
+                );
             }
-
-            searchInput.addEventListener('input', applyFilters);
-            statusFilter.addEventListener('change', applyFilters);
-            responsibleFilter.addEventListener('change', applyFilters);
+            
+            renderCases(filtered);
         }
 
         // 👥 Обновление списков пользователей в select'ах
