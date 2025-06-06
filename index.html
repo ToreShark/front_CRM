@@ -755,7 +755,8 @@
             
             if (caseData.hearing_date) {
                 const date = new Date(caseData.hearing_date);
-                document.getElementById('editHearingDate').value = date.toISOString().slice(0, 16);
+                const localDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+                document.getElementById('editHearingDate').value = localDate.toISOString().slice(0, 16);
             }
 
             document.getElementById('editModal').style.display = 'block';
