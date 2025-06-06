@@ -793,6 +793,8 @@
                 const caseId = parseInt(document.getElementById('editCaseId').value);
                 const newStatus = document.getElementById('editStatus').value;
                 const hearingDate = document.getElementById('editHearingDate').value;
+                console.log('🕐 Значение из input:', hearingDate);
+                console.log('🕐 Тип данных:', typeof hearingDate);
 
                 // Обновление статуса
                 await apiRequest(`/cases/${caseId}/status`, {
