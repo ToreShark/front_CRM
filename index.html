@@ -652,7 +652,7 @@
                 document.getElementById('statusFilter').value = teamFilters.status_filter || '';
                 document.getElementById('responsibleFilter').value = teamFilters.responsible_id || '';
                 
-                console.log('✅ Фильтры команды загружены:', teamFilters);
+                // console.log('✅ Фильтры команды загружены:', teamFilters);
             } catch (error) {
                 console.error('❌ Ошибка загрузки фильтров команды:', error);
             }
@@ -674,7 +674,7 @@
                 // После сохранения фильтров - перезагружаем дела
                 await loadCases();
                 
-                console.log('✅ Фильтры команды сохранены:', filterData);
+                // console.log('✅ Фильтры команды сохранены:', filterData);
             } catch (error) {
                 console.error('❌ Ошибка сохранения фильтров:', error);
                 showNotification('Ошибка сохранения фильтров: ' + error.message, 'error');
@@ -794,8 +794,8 @@
                 const caseId = parseInt(document.getElementById('editCaseId').value);
                 const newStatus = document.getElementById('editStatus').value;
                 const hearingDate = document.getElementById('editHearingDate').value;
-                console.log('🕐 Значение из input:', hearingDate);
-                console.log('🕐 Тип данных:', typeof hearingDate);
+                // console.log('🕐 Значение из input:', hearingDate);
+                // console.log('🕐 Тип данных:', typeof hearingDate);
                 
                 // Обновление статуса
                 await apiRequest(`/cases/${caseId}/status`, {
@@ -806,8 +806,8 @@
                 // Обновление даты заседания (если указана и статус "принят")
                 if (hearingDate && newStatus === 'accepted') {
                     const requestData = { hearing_date: hearingDate };
-                    console.log('🚀 Отправляем на сервер:', requestData);
-                    console.log('🚀 JSON строка:', JSON.stringify(requestData));
+                    // console.log('🚀 Отправляем на сервер:', requestData);
+                    // console.log('🚀 JSON строка:', JSON.stringify(requestData));
                     await apiRequest(`/cases/${caseId}/hearing`, {
                         method: 'PATCH',
                         body: JSON.stringify(requestData)
@@ -994,7 +994,7 @@
                 const select = document.getElementById(selectId);
                 const currentValue = select.value;
                 
-                console.log(`🔍 Обновляем select: ${selectId}`);
+                // console.log(`🔍 Обновляем select: ${selectId}`);
                 
                 // Очищаем опции кроме первой (placeholder)
                 while (select.children.length > 1) {
@@ -1003,7 +1003,7 @@
                 
                 // Добавляем всех пользователей
                 allUsers.forEach(user => {
-                    console.log(`➕ Добавляем: ${user.name} (ID: ${user.id})`);
+                    // console.log(`➕ Добавляем: ${user.name} (ID: ${user.id})`);
                     const option = document.createElement('option');
                     option.value = user.id;
                     option.textContent = `${user.name} (${getRoleText(user.role)})`;
@@ -1019,12 +1019,12 @@
                     // Если пользователь только один - автоматически выбираем
                     else if (allUsers.length === 1) {
                         select.value = allUsers[0].id;
-                        console.log(`✅ Автовыбор единственного пользователя: ${allUsers[0].name}`);
+                        // console.log(`✅ Автовыбор единственного пользователя: ${allUsers[0].name}`);
                     }
                     // Если несколько пользователей - оставляем placeholder для выбора
                     else {
                         select.value = '';
-                        console.log(`🎯 Несколько пользователей - ожидаем выбор пользователя`);
+                        // console.log(`🎯 Несколько пользователей - ожидаем выбор пользователя`);
                     }
                 } else {
                     // Для фильтров восстанавливаем старое значение
