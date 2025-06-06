@@ -795,11 +795,13 @@
                 const hearingDate = document.getElementById('editHearingDate').value;
                 console.log('🕐 Значение из input:', hearingDate);
                 console.log('🕐 Тип данных:', typeof hearingDate);
-
+                const requestData = { hearing_date: hearingDate };
+                console.log('🚀 Отправляем на сервер:', requestData);
+                console.log('🚀 JSON строка:', JSON.stringify(requestData));
                 // Обновление статуса
                 await apiRequest(`/cases/${caseId}/status`, {
                     method: 'PATCH',
-                    body: JSON.stringify({ status: newStatus })
+                    body: JSON.stringify(requestData)
                 });
 
                 // Обновление даты заседания (если указана и статус "принят")
