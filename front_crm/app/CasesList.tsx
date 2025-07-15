@@ -71,6 +71,35 @@ export default function CasesList() {
     }
   };
 
+  const deleteCase = async (caseId: number) => {
+    if (!confirm('Вы уверены, что хотите удалить это дело? Это действие нельзя отменить.')) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('access_token');
+      const response = await fetch(`http://localhost:3000/cases/${caseId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        fetchCases();
+      } else if (response.status === 403) {
+        alert('Только юристы могут удалять дела');
+      } else if (response.status === 404) {
+        alert('Дело не найдено');
+      } else {
+        alert('Ошибка при удалении дела');
+      }
+    } catch (error) {
+      console.error('Ошибка сети:', error);
+      alert('Ошибка сети при удалении дела');
+    }
+  };
+
   const handleEditCase = (caseItem: Case) => {
     setSelectedCase(caseItem);
     setEditModalOpen(true);
@@ -117,7 +146,7 @@ export default function CasesList() {
                   Изменить
                 </button>
                 <button
-                  onClick={() => console.log('Удалить дело:', caseItem.number)}
+                  onClick={() => deleteCase(caseItem.id)}
                   className="px-3 py-1 bg-red-500 text-white text-sm rounded hover:bg-red-600 transition-colors"
                 >
                   Удалить

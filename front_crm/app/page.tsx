@@ -7,7 +7,7 @@ export default function Home() {
 
   const handleLogin = async () => {
     try {
-      const response = await fetch('http://localhost:3000/auth/dev-token', {
+      const response = await fetch('http://localhost:3000/auth/dev-token-lawyer', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
