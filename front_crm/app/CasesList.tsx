@@ -1,8 +1,10 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import EditCaseModal from './EditCaseModal';
 
 interface Case {
+  id: number;
   number: string;
   title: string;
   description: string;
@@ -15,6 +17,8 @@ interface Case {
 export default function CasesList() {
   const [cases, setCases] = useState<Case[]>([]);
   const [loading, setLoading] = useState(true);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [selectedCase, setSelectedCase] = useState<Case | null>(null);
 
   const fetchCases = async () => {
     setLoading(true);
@@ -44,6 +48,33 @@ export default function CasesList() {
   useEffect(() => {
     fetchCases();
   }, []);
+
+  const updateCaseStatus = async (caseId: number, updates: { status: string; hearingDate?: string; acceptanceDate?: string }) => {
+    try {
+      const token = localStorage.getItem('access_token');
+      const response = await fetch(`http://localhost:3000/cases/${caseId}/status`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status: updates.status }),
+      });
+
+      if (response.ok) {
+        fetchCases();
+      } else {
+        console.error('Ошибка при обновлении статуса дела');
+      }
+    } catch (error) {
+      console.error('Ошибка сети:', error);
+    }
+  };
+
+  const handleEditCase = (caseItem: Case) => {
+    setSelectedCase(caseItem);
+    setEditModalOpen(true);
+  };
 
   if (loading) {
     return (
@@ -80,7 +111,7 @@ export default function CasesList() {
               <p className="text-gray-600 mb-4">{caseItem.description}</p>
               <div className="flex justify-end space-x-2">
                 <button
-                  onClick={() => console.log('Изменить дело:', caseItem.number)}
+                  onClick={() => handleEditCase(caseItem)}
                   className="px-3 py-1 bg-yellow-500 text-white text-sm rounded hover:bg-yellow-600 transition-colors"
                 >
                   Изменить
@@ -95,6 +126,18 @@ export default function CasesList() {
             </div>
           ))}
         </div>
+      )}
+      
+      {selectedCase && (
+        <EditCaseModal
+          case={selectedCase}
+          isOpen={editModalOpen}
+          onClose={() => {
+            setEditModalOpen(false);
+            setSelectedCase(null);
+          }}
+          onSave={updateCaseStatus}
+        />
       )}
     </div>
   );
