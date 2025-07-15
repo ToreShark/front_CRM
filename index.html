@@ -1128,11 +1128,16 @@
 
             // Фильтры статуса и ответственного теперь сохраняются на сервере
             statusFilter.addEventListener('change', function() {
-                saveTeamFilters(); // Сохраняем на сервер и перезагружаем дела
+                // Сначала сохраняем на сервер и перезагружаем дела, потом обновляем отображение
+                saveTeamFilters().then(() => {
+                    renderCases(); // Принудительно перерендериваем с новым фильтром
+                });
             });
 
             responsibleFilter.addEventListener('change', function() {
-                saveTeamFilters(); // Сохраняем на сервер и перезагружаем дела
+                saveTeamFilters().then(() => {
+                    renderCases(); // Принудительно перерендериваем с новым фильтром
+                });
             });
         }
 
