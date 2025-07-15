@@ -866,7 +866,7 @@
                 });
 
                 // Обновление даты принятия дела
-                if (acceptedDate) {
+                if (acceptedDate && newStatus === 'accepted') {
                     await apiRequest(`/cases/${caseId}/accepted-date`, {
                         method: 'PATCH',
                         body: JSON.stringify({ accepted_date: acceptedDate })
