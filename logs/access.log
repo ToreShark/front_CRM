@@ -8860,3 +8860,5 @@
 172.29.0.1 - - [15/Jul/2025:13:47:29 +0000] "GET / HTTP/1.0" 304 0 "-" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36" "2.79.60.219"
 172.29.0.1 - - [15/Jul/2025:13:49:52 +0000] "GET /cgi-bin/luci/;stok=/locale HTTP/1.0" 200 56452 "-" "-" "45.194.66.13"
 172.29.0.1 - - [15/Jul/2025:13:50:10 +0000] "GET /favicon.ico HTTP/1.0" 404 56452 "https://bot.primelegal.kz/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36" "37.208.42.227"
+172.29.0.1 - - [15/Jul/2025:13:53:57 +0000] "GET / HTTP/1.0" 200 56452 "http://bot.primelegal.kz" "Mozilla/5.0 (Windows NT 10.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/106.0.0.0 Safari/537.36" "205.169.39.8"
+79.124.58.198 - - [15/Jul/2025:13:57:21 +0000] "GET /jars HTTP/1.1" 200 14309 "-" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.108 Safari/537.36" "-"
