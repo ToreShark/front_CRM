@@ -40,7 +40,7 @@ interface Case {
   };
 }
 
-export default function CasesList() {
+export default function AcceptedCases() {
   const [cases, setCases] = useState<Case[]>([]);
   const [loading, setLoading] = useState(true);
   const [editModalOpen, setEditModalOpen] = useState(false);
@@ -50,7 +50,7 @@ export default function CasesList() {
     setLoading(true);
     try {
       const token = localStorage.getItem('access_token');
-      const response = await fetch('http://localhost:3000/cases/submitted', {
+      const response = await fetch('http://localhost:3000/cases/accepted', {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -60,9 +60,9 @@ export default function CasesList() {
 
       if (response.ok) {
         const data = await response.json();
-        setCases(data);
+        setCases(Array.isArray(data) ? data : []);
       } else {
-        console.error('Ошибка при получении дел');
+        console.error('Ошибка при получении принятых дел');
       }
     } catch (error) {
       console.error('Ошибка сети:', error);
@@ -103,26 +103,32 @@ export default function CasesList() {
         );
       }
 
-      // 2. Обновить дату заседания если она изменилась (только для принятых дел)
-      if (updates.hearingDate !== undefined && updates.status === 'accepted') {
-        requests.push(
-          fetch(`http://localhost:3000/cases/${caseId}/hearing`, {
-            method: 'PATCH',
-            headers,
-            body: JSON.stringify({ hearing_date: updates.hearingDate }),
-          })
-        );
+      // 2. Обновить дату заседания если она изменилась
+      if (updates.hearingDate !== undefined) {
+        const currentHearingDate = currentCase.hearing_date;
+        if (updates.hearingDate !== currentHearingDate) {
+          requests.push(
+            fetch(`http://localhost:3000/cases/${caseId}/hearing`, {
+              method: 'PATCH',
+              headers,
+              body: JSON.stringify({ hearing_date: updates.hearingDate }),
+            })
+          );
+        }
       }
 
       // 3. Обновить дату принятия если она изменилась
       if (updates.acceptanceDate !== undefined) {
-        requests.push(
-          fetch(`http://localhost:3000/cases/${caseId}/accepted-date`, {
-            method: 'PATCH',
-            headers,
-            body: JSON.stringify({ accepted_date: updates.acceptanceDate }),
-          })
-        );
+        const currentAcceptanceDate = currentCase.accepted_date?.split('T')[0];
+        if (updates.acceptanceDate !== currentAcceptanceDate) {
+          requests.push(
+            fetch(`http://localhost:3000/cases/${caseId}/accepted-date`, {
+              method: 'PATCH',
+              headers,
+              body: JSON.stringify({ accepted_date: updates.acceptanceDate }),
+            })
+          );
+        }
       }
 
       // Выполнить все необходимые запросы
@@ -135,6 +141,7 @@ export default function CasesList() {
         fetchCases();
       } else {
         console.error('Ошибка при обновлении дела');
+        // Показать более детальную ошибку
         responses.forEach((response, index) => {
           if (!response.ok) {
             console.error(`Ошибка в запросе ${index + 1}:`, response.status, response.statusText);
@@ -180,11 +187,16 @@ export default function CasesList() {
     setEditModalOpen(true);
   };
 
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return 'Не указано';
+    return new Date(dateString).toLocaleDateString('ru-RU');
+  };
+
   if (loading) {
     return (
       <div className="p-4 text-center">
-        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-        <p className="mt-2 text-gray-600">Загрузка дел...</p>
+        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"></div>
+        <p className="mt-2 text-gray-600">Загрузка принятых дел...</p>
       </div>
     );
   }
@@ -192,27 +204,52 @@ export default function CasesList() {
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-semibold text-gray-800">Список дел</h2>
-        <button className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
-          Подан
+        <h2 className="text-xl font-semibold text-gray-800">Принятые дела</h2>
+        <button className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors">
+          Принятые
         </button>
       </div>
       {cases.length === 0 ? (
-        <p className="text-gray-600">Дела не найдены</p>
+        <p className="text-gray-600">Принятые дела не найдены</p>
       ) : (
         <div className="space-y-4">
           {cases.map((caseItem, index) => (
             <div key={index} className="border border-gray-200 rounded-lg p-4">
               <div className="flex justify-between items-start mb-2">
-                <span className="bg-blue-100 text-blue-800 text-sm font-medium px-3 py-1 rounded-full">
+                <span className="bg-green-100 text-green-800 text-sm font-medium px-3 py-1 rounded-full">
                   {caseItem.number}
                 </span>
                 <span className="text-sm text-gray-600">
-                  Ответственный: {caseItem.responsible.name}
+                  Ответственный: {caseItem.responsible.name} ({caseItem.responsible.username || 'Не указан'})
                 </span>
               </div>
               <h3 className="text-lg font-semibold text-gray-800 mb-2">{caseItem.title}</h3>
-              <p className="text-gray-600 mb-4">{caseItem.description}</p>
+              <p className="text-gray-600 mb-2">{caseItem.description}</p>
+              
+              <div className="grid grid-cols-2 gap-4 mb-4 text-sm text-gray-600">
+                <div>
+                  <span className="font-medium">Дата подачи:</span> {formatDate(caseItem.filing_date)}
+                </div>
+                <div>
+                  <span className="font-medium">Дата принятия:</span> {formatDate(caseItem.accepted_date)}
+                </div>
+                <div>
+                  <span className="font-medium">Дата заседания:</span> {formatDate(caseItem.hearing_date)}
+                </div>
+                <div>
+                  <span className="font-medium">Дата окончания дела:</span> {formatDate(caseItem.case_end_date)}
+                </div>
+                <div>
+                  <span className="font-medium">Роль ответственного:</span> {caseItem.responsible.role === 'lawyer' ? 'Юрист' : 'Ассистент'}
+                </div>
+                <div>
+                  <span className="font-medium">Статус:</span> 
+                  <span className="ml-1 px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">
+                    Принято
+                  </span>
+                </div>
+              </div>
+              
               <div className="flex justify-end space-x-2">
                 <button
                   onClick={() => handleEditCase(caseItem)}

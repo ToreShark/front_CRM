@@ -8,8 +8,34 @@ interface Case {
   title: string;
   description: string;
   status: string;
+  filing_date?: string;
+  check_deadline?: string;
+  created_at?: string;
+  updated_at?: string;
+  hearing_date?: string;
+  decision_date?: string;
+  appeal_hearing_date?: string;
+  appeal_deadline?: string;
+  decision_deadline?: string;
+  case_end_date?: string;
+  accepted_date?: string;
+  notifications_sent?: {
+    day_before?: boolean;
+    hour_before?: boolean;
+    check_reminder?: boolean;
+    day_before_sent_at?: string;
+    hour_before_sent_at?: string;
+    check_reminder_sent_at?: string;
+  };
   responsible: {
+    id: number;
+    telegram_id: string;
+    role: string;
     name: string;
+    is_active: boolean;
+    created_at: string;
+    updated_at: string;
+    username: string | null;
   };
 }
 
@@ -46,16 +72,25 @@ const statusLabels = {
 
 export default function EditCaseModal({ case: caseItem, isOpen, onClose, onSave }: EditCaseModalProps) {
   const [status, setStatus] = useState(caseItem.status);
-  const [hearingDate, setHearingDate] = useState('');
-  const [hearingTime, setHearingTime] = useState('');
-  const [acceptanceDate, setAcceptanceDate] = useState('');
+  const [hearingDate, setHearingDate] = useState(
+    caseItem.hearing_date ? caseItem.hearing_date.split('T')[0] : ''
+  );
+  const [hearingTime, setHearingTime] = useState(
+    caseItem.hearing_date ? caseItem.hearing_date.split('T')[1]?.substring(0, 5) || '' : ''
+  );
+  const [acceptanceDate, setAcceptanceDate] = useState(
+    caseItem.accepted_date ? caseItem.accepted_date.split('T')[0] : ''
+  );
 
   if (!isOpen) return null;
 
   const availableStatuses = getAvailableStatuses(caseItem.status);
 
   const handleSave = () => {
-    if (!hearingDate || !hearingTime) {
+    // Для статусов "Решение принято" и "Обжалование" требуется дата заседания
+    const statusesRequiringHearing = ['decision_made', 'appeal'];
+    
+    if (statusesRequiringHearing.includes(status) && (!hearingDate || !hearingTime)) {
       alert('Дата и время заседания обязательны для заполнения');
       return;
     }
@@ -105,26 +140,26 @@ export default function EditCaseModal({ case: caseItem, isOpen, onClose, onSave 
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Дата заседания *
+              Дата заседания {['decision_made', 'appeal'].includes(status) ? '*' : ''}
             </label>
             <input
               type="date"
               value={hearingDate}
               onChange={(e) => setHearingDate(e.target.value)}
-              required
+              required={['decision_made', 'appeal'].includes(status)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Время заседания *
+              Время заседания {['decision_made', 'appeal'].includes(status) ? '*' : ''}
             </label>
             <input
               type="time"
               value={hearingTime}
               onChange={(e) => setHearingTime(e.target.value)}
-              required
+              required={['decision_made', 'appeal'].includes(status)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>

@@ -13,21 +13,6 @@ interface Case {
   check_deadline?: string;
   created_at?: string;
   updated_at?: string;
-  hearing_date?: string;
-  decision_date?: string;
-  appeal_hearing_date?: string;
-  appeal_deadline?: string;
-  decision_deadline?: string;
-  case_end_date?: string;
-  accepted_date?: string;
-  notifications_sent?: {
-    day_before?: boolean;
-    hour_before?: boolean;
-    check_reminder?: boolean;
-    day_before_sent_at?: string;
-    hour_before_sent_at?: string;
-    check_reminder_sent_at?: string;
-  };
   responsible: {
     id: number;
     telegram_id: string;
@@ -36,11 +21,11 @@ interface Case {
     is_active: boolean;
     created_at: string;
     updated_at: string;
-    username: string | null;
+    username: string;
   };
 }
 
-export default function CasesList() {
+export default function PendingCheckCases() {
   const [cases, setCases] = useState<Case[]>([]);
   const [loading, setLoading] = useState(true);
   const [editModalOpen, setEditModalOpen] = useState(false);
@@ -50,7 +35,7 @@ export default function CasesList() {
     setLoading(true);
     try {
       const token = localStorage.getItem('access_token');
-      const response = await fetch('http://localhost:3000/cases/submitted', {
+      const response = await fetch('http://localhost:3000/cases/pending-check-full', {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -60,9 +45,9 @@ export default function CasesList() {
 
       if (response.ok) {
         const data = await response.json();
-        setCases(data);
+        setCases(Array.isArray(data) ? data : []);
       } else {
-        console.error('Ошибка при получении дел');
+        console.error('Ошибка при получении дел на проверке');
       }
     } catch (error) {
       console.error('Ошибка сети:', error);
@@ -180,11 +165,16 @@ export default function CasesList() {
     setEditModalOpen(true);
   };
 
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return 'Не указано';
+    return new Date(dateString).toLocaleDateString('ru-RU');
+  };
+
   if (loading) {
     return (
       <div className="p-4 text-center">
-        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-        <p className="mt-2 text-gray-600">Загрузка дел...</p>
+        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
+        <p className="mt-2 text-gray-600">Загрузка дел на проверке...</p>
       </div>
     );
   }
@@ -192,27 +182,45 @@ export default function CasesList() {
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-semibold text-gray-800">Список дел</h2>
-        <button className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
-          Подан
+        <h2 className="text-xl font-semibold text-gray-800">Дела на проверке</h2>
+        <button className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors">
+          На проверке
         </button>
       </div>
       {cases.length === 0 ? (
-        <p className="text-gray-600">Дела не найдены</p>
+        <p className="text-gray-600">Дела на проверке не найдены</p>
       ) : (
         <div className="space-y-4">
           {cases.map((caseItem, index) => (
             <div key={index} className="border border-gray-200 rounded-lg p-4">
               <div className="flex justify-between items-start mb-2">
-                <span className="bg-blue-100 text-blue-800 text-sm font-medium px-3 py-1 rounded-full">
+                <span className="bg-orange-100 text-orange-800 text-sm font-medium px-3 py-1 rounded-full">
                   {caseItem.number}
                 </span>
                 <span className="text-sm text-gray-600">
-                  Ответственный: {caseItem.responsible.name}
+                  Ответственный: {caseItem.responsible.name} ({caseItem.responsible.username})
                 </span>
               </div>
               <h3 className="text-lg font-semibold text-gray-800 mb-2">{caseItem.title}</h3>
-              <p className="text-gray-600 mb-4">{caseItem.description}</p>
+              <p className="text-gray-600 mb-2">{caseItem.description}</p>
+              
+              <div className="grid grid-cols-2 gap-4 mb-4 text-sm text-gray-600">
+                <div>
+                  <span className="font-medium">Дата подачи:</span> {formatDate(caseItem.filing_date)}
+                </div>
+                <div>
+                  <span className="font-medium">Срок проверки:</span> {formatDate(caseItem.check_deadline)}
+                </div>
+                <div>
+                  <span className="font-medium">Роль ответственного:</span> {caseItem.responsible.role === 'lawyer' ? 'Юрист' : 'Ассистент'}
+                </div>
+                <div>
+                  <span className="font-medium">Статус:</span> 
+                  <span className="ml-1 px-2 py-1 bg-orange-100 text-orange-800 rounded-full text-xs">
+                    На проверке
+                  </span>
+                </div>
+              </div>
               <div className="flex justify-end space-x-2">
                 <button
                   onClick={() => handleEditCase(caseItem)}

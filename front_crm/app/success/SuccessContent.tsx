@@ -3,12 +3,15 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import CasesList from '../CasesList';
+import PendingCheckCases from '../PendingCheckCases';
+import AcceptedCases from '../AcceptedCases';
 import CreateCaseModal from '../CreateCaseModal';
 
 export default function SuccessContent() {
   const router = useRouter();
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [activeView, setActiveView] = useState<'submitted' | 'pending_check' | 'accepted'>('submitted');
 
   const handleLogout = () => {
     localStorage.removeItem('access_token');
@@ -78,7 +81,49 @@ export default function SuccessContent() {
             </div>
           </div>
         </div>
-        <CasesList key={refreshKey} />
+        
+        <div className="bg-white rounded-xl shadow-lg p-4 mb-6">
+          <div className="flex space-x-4">
+            <button
+              onClick={() => setActiveView('submitted')}
+              className={`px-6 py-3 font-medium rounded-lg transition-colors ${
+                activeView === 'submitted'
+                  ? 'bg-blue-500 text-white'
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              }`}
+            >
+              Подан
+            </button>
+            <button
+              onClick={() => setActiveView('pending_check')}
+              className={`px-6 py-3 font-medium rounded-lg transition-colors ${
+                activeView === 'pending_check'
+                  ? 'bg-orange-500 text-white'
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              }`}
+            >
+              На проверке
+            </button>
+            <button
+              onClick={() => setActiveView('accepted')}
+              className={`px-6 py-3 font-medium rounded-lg transition-colors ${
+                activeView === 'accepted'
+                  ? 'bg-green-500 text-white'
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              }`}
+            >
+              Принятые
+            </button>
+          </div>
+        </div>
+        
+        {activeView === 'submitted' ? (
+          <CasesList key={refreshKey} />
+        ) : activeView === 'pending_check' ? (
+          <PendingCheckCases key={refreshKey} />
+        ) : (
+          <AcceptedCases key={refreshKey} />
+        )}
         
         <CreateCaseModal
           isOpen={createModalOpen}
