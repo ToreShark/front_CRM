@@ -19,6 +19,8 @@ interface Case {
   decision_deadline?: string;
   case_end_date?: string;
   accepted_date?: string;
+  return_date?: string;
+  return_reason?: string;
   notifications_sent?: {
     day_before?: boolean;
     hour_before?: boolean;
@@ -43,16 +45,16 @@ interface EditCaseModalProps {
   case: Case;
   isOpen: boolean;
   onClose: () => void;
-  onSave: (caseId: number, updates: { status: string; hearingDate?: string; acceptanceDate?: string }) => void;
+  onSave: (caseId: number, updates: { status: string; hearingDate?: string; acceptanceDate?: string; returnDate?: string }) => void;
 }
 
 function getAvailableStatuses(currentStatus: string) {
   const transitions = {
     'submitted': ['pending_check', 'accepted', 'returned'],
     'pending_check': ['accepted', 'returned'],
-    'accepted': ['decision_made'],
+    'accepted': ['decision_made', 'closed', 'returned'],
     'decision_made': ['appeal', 'closed'],
-    'returned': ['submitted'],
+    'returned': ['appeal', 'closed', 'submitted'],
     'appeal': ['closed'],
     'closed': []
   };
@@ -87,19 +89,33 @@ export default function EditCaseModal({ case: caseItem, isOpen, onClose, onSave 
   const availableStatuses = getAvailableStatuses(caseItem.status);
 
   const handleSave = () => {
-    // Для статусов "Решение принято" и "Обжалование" требуется дата заседания
-    const statusesRequiringHearing = ['decision_made', 'appeal'];
+    // Для статуса "Решение принято" требуется дата заседания
+    const statusesRequiringHearing = ['decision_made'];
     
     if (statusesRequiringHearing.includes(status) && (!hearingDate || !hearingTime)) {
       alert('Дата и время заседания обязательны для заполнения');
       return;
     }
     
-    const updates = {
+    const updates: any = {
       status,
-      hearingDate: hearingDate && hearingTime ? `${hearingDate}T${hearingTime}` : undefined,
-      acceptanceDate: acceptanceDate || undefined
     };
+    
+    if (status === 'returned') {
+      // Для статуса "returned" отправляем дату возврата
+      if (hearingDate) {
+        updates.returnDate = hearingDate;
+      }
+    } else {
+      // Для других статусов отправляем дату заседания
+      if (hearingDate && hearingTime) {
+        updates.hearingDate = `${hearingDate}T${hearingTime}`;
+      }
+    }
+    
+    if (acceptanceDate) {
+      updates.acceptanceDate = acceptanceDate;
+    }
     onSave(caseItem.id, updates);
     onClose();
   };
@@ -140,29 +156,31 @@ export default function EditCaseModal({ case: caseItem, isOpen, onClose, onSave 
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Дата заседания {['decision_made', 'appeal'].includes(status) ? '*' : ''}
+              {status === 'returned' ? 'Дата возврата' : 'Дата заседания'} {['decision_made'].includes(status) ? '*' : ''}
             </label>
             <input
               type="date"
               value={hearingDate}
               onChange={(e) => setHearingDate(e.target.value)}
-              required={['decision_made', 'appeal'].includes(status)}
+              required={['decision_made'].includes(status)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Время заседания {['decision_made', 'appeal'].includes(status) ? '*' : ''}
-            </label>
-            <input
-              type="time"
-              value={hearingTime}
-              onChange={(e) => setHearingTime(e.target.value)}
-              required={['decision_made', 'appeal'].includes(status)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
+          {status !== 'returned' && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Время заседания {['decision_made'].includes(status) ? '*' : ''}
+              </label>
+              <input
+                type="time"
+                value={hearingTime}
+                onChange={(e) => setHearingTime(e.target.value)}
+                required={['decision_made'].includes(status)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+          )}
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Дата принятия дела</label>

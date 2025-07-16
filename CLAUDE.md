@@ -2,146 +2,137 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Repository Overview
+## Project Overview
 
-This is a frontend application for a legal case management system (CRM) specifically designed for legal professionals in Kazakhstan. The application provides a web interface for managing court cases, tracking deadlines, and coordinating legal team activities.
+This is a legal case management system (CRM) for judicial proceedings, built as a single-page application using vanilla HTML/CSS/JavaScript. The system manages court cases from initial submission through final resolution, with Telegram-based authentication and real-time status tracking.
+
+**Language**: Russian (UI, comments, and documentation)
+**Technology**: Pure HTML/CSS/JavaScript (no framework/build system)
+**Deployment**: Docker with Nginx serving static files
 
 ## Architecture
 
-### Frontend Structure
-- **Single-page application**: All functionality contained in `index.html` with embedded CSS and JavaScript
-- **Vanilla JavaScript**: No frontend frameworks, uses modern ES6+ features
-- **Responsive design**: Mobile-first approach with CSS Grid and Flexbox
-- **Real-time features**: Dynamic updates and filtering without page refresh
+### Structure
+- **Monolithic Frontend**: Single `index.html` file (1288 lines) containing all HTML, CSS, and JavaScript
+- **API Integration**: RESTful communication with backend at `https://bot.primelegal.kz/api`
+- **Authentication**: Telegram OAuth via @LawyerTorekhanBot
+- **State Management**: Session-based with JWT tokens in sessionStorage
 
-### Authentication System
-- **Telegram-based login**: Uses Telegram Bot API for user authentication
-- **Session management**: JWT tokens stored in sessionStorage
-- **Role-based access**: Supports "lawyer" and "assistant" roles
-
-### API Integration
-- **Backend API**: Communicates with NestJS backend at `/api` endpoints
-- **RESTful design**: Standard HTTP methods (GET, POST, PATCH, DELETE)
-- **Error handling**: Comprehensive error handling with user notifications
+### Key Components (within index.html)
+- **Authentication System**: Telegram widget integration and token management
+- **Dashboard**: Statistics overview with case counts and deadline tracking
+- **Case Management**: CRUD operations with status workflow
+- **Filtering System**: Team-based filters with server persistence
+- **Export Functions**: CSV generation and report creation
 
 ## Development Commands
 
-### Local Development
+### Docker Operations
 ```bash
-# Serve static files locally (development)
-python -m http.server 8080
-# or
-npx serve .
-
-# View in browser
-open http://localhost:8080
-```
-
-### Docker Deployment
-```bash
-# Build and run with Docker Compose
+# Start the application
 docker-compose up -d
 
 # View logs
 docker-compose logs -f frontend
 
+# Rebuild after changes
+docker-compose up -d --build
+
 # Stop services
 docker-compose down
 ```
 
-### Production Deployment
+### File Serving
+Since this is a static application, changes to `index.html` require container restart:
 ```bash
-# Build Docker image
-docker build -t legal-system-frontend .
-
-# Run container
-docker run -p 8081:80 legal-system-frontend
+docker-compose restart frontend
 ```
 
-## Key Application Features
+## API Endpoints
 
-### Case Management
-- **Create cases**: Add new court cases with filing dates and assignments
-- **Status tracking**: Track case progress through legal workflow states
-- **Hearing scheduling**: Manage court hearing dates and deadlines
-- **Team assignment**: Assign cases to specific lawyers or assistants
+The application communicates with these backend endpoints:
+- `POST /auth/telegram` - Telegram authentication
+- `GET /auth/me` - Current user information
+- `GET /cases` - Retrieve cases with filtering
+- `POST /cases` - Create new case
+- `PUT /cases/:id` - Update case
+- `DELETE /cases/:id` - Delete case
+- `GET /users` - Get users list for assignments
+- `GET /team-filters` - Retrieve saved team filters
+- `POST /team-filters` - Save team filter preferences
 
-### Filtering and Search
-- **Team filters**: Server-side filtering by status and responsible person
-- **Local search**: Client-side search by case number, title, or assignee
-- **Status-based filtering**: Filter cases by current legal status
+## Case Management Workflow
 
-### Notification System
-- **Telegram integration**: Send notifications to team members
-- **Deadline alerts**: Automatic alerts for upcoming court dates
-- **Case ending warnings**: Alerts when cases are approaching deadlines
+### Case Statuses
+1. `submitted` - Подано в суд
+2. `pending_check` - На проверке
+3. `accepted` - Принято
+4. `returned` - Возвращено
+5. `closed` - Дело закрыто
+6. `decision_made` - Решение принято
+7. `appeal` - Обжалование
 
-## Backend API Dependencies
+### Business Logic
+- **End Date Calculation**: Automatically set to 23 business days from acceptance
+- **User Roles**: `lawyer` and `assistant` with different permissions
+- **Team Filters**: Persistent per-user filtering saved on server
+- **Deadline Tracking**: Automatic highlighting of cases approaching deadlines
 
-The frontend expects these API endpoints to be available:
+## Key Features
 
 ### Authentication
-- `POST /api/auth/telegram` - Telegram authentication
-- `GET /api/auth/me` - Get current user info
+- Telegram bot integration for secure login
+- JWT token management in sessionStorage
+- Automatic token validation and refresh
 
-### Case Management
-- `GET /api/cases` - List all cases (with team filtering)
-- `POST /api/cases` - Create new case
-- `PATCH /api/cases/:id/status` - Update case status
-- `PATCH /api/cases/:id/hearing` - Update hearing date
-- `PATCH /api/cases/:id/appeal-hearing` - Update appeal hearing date
-- `DELETE /api/cases/:id` - Delete case
+### Case Tracking
+- Full case lifecycle management
+- Hearing date scheduling
+- Responsible person assignment
+- Status-based workflow with automatic transitions
 
-### User Management
-- `GET /api/users` - List all users
-- `GET /api/team-filters` - Get team filter settings
-- `PATCH /api/team-filters` - Update team filter settings
+### Data Management
+- Real-time search and filtering
+- CSV export functionality
+- Team-based data organization
+- Persistent user preferences
 
-### Notifications
-- `POST /api/telegram/test` - Send test notification
+## Deployment Configuration
 
-## Configuration
+### Docker Setup
+- **Frontend Container**: nginx:alpine serving static files on port 8081
+- **Network**: Uses `legal-network` for service communication
+- **Volume Mounting**: `index.html` mounted to nginx html directory
 
-### Environment Variables
-- `NGINX_HOST`: Hostname for nginx configuration
-- `NGINX_PORT`: Port for nginx service
-
-### API Configuration
-- Base URL: `/api` (relative path, proxied by nginx)
-- Authentication: Bearer token in Authorization header
-
-## Legal Workflow States
-
-The application manages cases through these states:
-- `submitted`: Case filed with court
-- `pending_check`: Under review
-- `accepted`: Case accepted, hearing scheduled
-- `returned`: Case returned for corrections
-- `decision_made`: Court decision rendered
-- `appeal`: Appeal process initiated
-- `closed`: Case closed
+### Nginx Configuration
+- Gzip compression enabled
+- Security headers configured (XSS protection, frame options, etc.)
+- SPA routing (all routes redirect to index.html)
+- Static file caching (1 year for assets)
 
 ## Important Notes
 
+### Code Organization
+- All frontend code is in single `index.html` file
+- No build process or package manager
+- Inline CSS with modern responsive design
+- Pure JavaScript with DOM manipulation
+
 ### Security Considerations
-- All API calls include CSRF protection headers
-- Telegram authentication validates user identity
-- Session tokens expire and require re-authentication
-- Input validation prevents XSS attacks
+- JWT tokens stored in sessionStorage (not localStorage)
+- CSRF protection via secure headers
+- XSS protection enabled in nginx
+- Frame options set to DENY
 
-### Performance Optimizations
-- Gzip compression enabled in nginx
-- Client-side caching for static assets
-- Efficient DOM manipulation without frameworks
-- Minimal API calls through smart caching
+### Localization
+- Entire interface in Russian language
+- Date formats follow Russian conventions
+- Legal terminology specific to Kazakhstan court system
 
-### Browser Compatibility
-- Modern browsers supporting ES6+ features
-- Responsive design works on mobile devices
-- Fallback handling for older browsers where needed
+### Development Workflow
+1. Edit `index.html` directly
+2. Test changes locally by opening file in browser
+3. Deploy via Docker container restart
+4. Monitor via docker-compose logs
 
-### Deployment Notes
-- Production deployment uses nginx for static file serving
-- Docker containers for consistent deployment
-- Log files mounted for monitoring
-- Health checks and restart policies configured
+Since there's no build system, changes are immediately visible after container restart.

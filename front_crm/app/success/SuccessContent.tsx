@@ -1,24 +1,31 @@
 "use client";
 
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useAuth } from '../contexts/AuthContext';
 import CasesList from '../CasesList';
 import PendingCheckCases from '../PendingCheckCases';
 import AcceptedCases from '../AcceptedCases';
+import ReturnedCases from '../ReturnedCases';
+import DecisionMadeCases from '../DecisionMadeCases';
 import CreateCaseModal from '../CreateCaseModal';
 
 export default function SuccessContent() {
   const router = useRouter();
+  const { user, logout, loading } = useAuth();
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
-  const [activeView, setActiveView] = useState<'submitted' | 'pending_check' | 'accepted'>('submitted');
+  const [activeView, setActiveView] = useState<'submitted' | 'pending_check' | 'accepted' | 'returned' | 'decision_made'>('submitted');
+
+  useEffect(() => {
+    // Если пользователь не авторизован, перенаправляем на главную
+    if (!loading && !user) {
+      router.push('/');
+    }
+  }, [user, loading, router]);
 
   const handleLogout = () => {
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('refresh_token');
-    localStorage.removeItem('user');
-    sessionStorage.clear();
-    router.push('/');
+    logout();
   };
 
   const createCase = async (caseData: {
@@ -29,8 +36,8 @@ export default function SuccessContent() {
     responsible_id: number;
   }) => {
     try {
-      const token = localStorage.getItem('access_token');
-      const response = await fetch('http://localhost:3000/cases', {
+      const token = sessionStorage.getItem('authToken');
+      const response = await fetch('https://bot.primelegal.kz/api/cases', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -58,7 +65,7 @@ export default function SuccessContent() {
           <div className="flex justify-between items-center mb-6">
             <div>
               <h1 className="text-3xl font-bold text-gray-800 mb-2">
-                <span className="text-green-600">✓</span> Успешная авторизация!
+                <span className="text-green-600">✓</span> Добро пожаловать, {user?.name || 'Пользователь'}!
               </h1>
               <p className="text-gray-600">Вы успешно авторизованы в системе</p>
             </div>
@@ -114,6 +121,26 @@ export default function SuccessContent() {
             >
               Принятые
             </button>
+            <button
+              onClick={() => setActiveView('returned')}
+              className={`px-6 py-3 font-medium rounded-lg transition-colors ${
+                activeView === 'returned'
+                  ? 'bg-red-500 text-white'
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              }`}
+            >
+              Возвращенные
+            </button>
+            <button
+              onClick={() => setActiveView('decision_made')}
+              className={`px-6 py-3 font-medium rounded-lg transition-colors ${
+                activeView === 'decision_made'
+                  ? 'bg-purple-500 text-white'
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              }`}
+            >
+              Решение принято
+            </button>
           </div>
         </div>
         
@@ -121,8 +148,12 @@ export default function SuccessContent() {
           <CasesList key={refreshKey} />
         ) : activeView === 'pending_check' ? (
           <PendingCheckCases key={refreshKey} />
-        ) : (
+        ) : activeView === 'accepted' ? (
           <AcceptedCases key={refreshKey} />
+        ) : activeView === 'returned' ? (
+          <ReturnedCases key={refreshKey} />
+        ) : (
+          <DecisionMadeCases key={refreshKey} />
         )}
         
         <CreateCaseModal

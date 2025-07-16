@@ -37,8 +37,8 @@ export default function CreateCaseModal({ isOpen, onClose, onSave }: CreateCaseM
 
   const fetchLawyers = async () => {
     try {
-      const token = localStorage.getItem('access_token');
-      const response = await fetch('http://localhost:3000/users?role=lawyer', {
+      const token = sessionStorage.getItem('authToken');
+      const response = await fetch('https://bot.primelegal.kz/api/users?role=lawyer', {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
