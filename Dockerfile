@@ -26,8 +26,7 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 # Копируем собранные статические файлы из этапа сборки
 COPY --from=builder /app/out /usr/share/nginx/html
 
-# Запускаем от non-root пользователя для безопасности
-USER 101
+# USER 101 убрали - nginx нужны права для логов
 
 # Добавляем health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \

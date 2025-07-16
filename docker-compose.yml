@@ -5,30 +5,24 @@ services:
     build: .
     container_name: legal-system-frontend
     ports:
-      - "8081:80"  # Фронтенд на порту 80
+      - "8081:80"
     restart: unless-stopped
     environment:
       - NGINX_HOST=bot.primelegal.kz
       - NGINX_PORT=80
     volumes:
-      # Опционально: для логов nginx
       - ./logs:/var/log/nginx
     networks:
-      - legal-network
+      - lawyer-network  # ← Измените на lawyer-network
+    depends_on:
+      - api  # ← Добавьте зависимость
 
-  # API Backend (Nest.js) - добавьте когда будет готов
-  # api:
-  #   build: ./api
-  #   container_name: legal-system-api
-  #   ports:
-  #     - "3003:3000"  # API на порту 3003
-  #   restart: unless-stopped
-  #   environment:
-  #     - NODE_ENV=production
-  #     - PORT=3000
-  #   networks:
-  #     - legal-network
+  # Раскомментируйте API секцию или используйте external network
+  api:
+    external_name: legal-system-api
+    networks:
+      - lawyer-network
 
 networks:
-  legal-network:
-    driver: bridge
+  lawyer-network:
+    external: true  # ← Используем существующую сеть от API
