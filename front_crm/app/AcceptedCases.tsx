@@ -50,7 +50,7 @@ export default function AcceptedCases() {
     setLoading(true);
     try {
       const token = sessionStorage.getItem('authToken');
-      const response = await fetch('https://bot.primelegal.kz/api/cases/accepted', {
+      const response = await fetch('/api/cases/accepted', {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -101,7 +101,7 @@ export default function AcceptedCases() {
           if (updates.hearingDate) acceptPayload.hearing_date = updates.hearingDate;
           
           requests.push(
-            fetch(`https://bot.primelegal.kz/api/cases/${caseId}/accept`, {
+            fetch(`/api/cases/${caseId}/accept`, {
               method: 'PATCH',
               headers,
               body: JSON.stringify(acceptPayload),
@@ -117,7 +117,7 @@ export default function AcceptedCases() {
           }
           
           requests.push(
-            fetch(`https://bot.primelegal.kz/api/cases/${caseId}/status`, {
+            fetch(`/api/cases/${caseId}/status`, {
               method: 'PATCH',
               headers,
               body: JSON.stringify(returnPayload),
@@ -126,7 +126,7 @@ export default function AcceptedCases() {
         } else {
           // Использовать обычный эндпоинт для других статусов
           requests.push(
-            fetch(`https://bot.primelegal.kz/api/cases/${caseId}/status`, {
+            fetch(`/api/cases/${caseId}/status`, {
               method: 'PATCH',
               headers,
               body: JSON.stringify({ status: updates.status }),
@@ -140,7 +140,7 @@ export default function AcceptedCases() {
         const currentHearingDate = currentCase.hearing_date;
         if (updates.hearingDate !== currentHearingDate) {
           requests.push(
-            fetch(`https://bot.primelegal.kz/api/cases/${caseId}/hearing`, {
+            fetch(`/api/cases/${caseId}/hearing`, {
               method: 'PATCH',
               headers,
               body: JSON.stringify({ hearing_date: updates.hearingDate }),
@@ -154,7 +154,7 @@ export default function AcceptedCases() {
         const currentAcceptanceDate = currentCase.accepted_date?.split('T')[0];
         if (updates.acceptanceDate !== currentAcceptanceDate) {
           requests.push(
-            fetch(`https://bot.primelegal.kz/api/cases/${caseId}/accepted-date`, {
+            fetch(`/api/cases/${caseId}/accepted-date`, {
               method: 'PATCH',
               headers,
               body: JSON.stringify({ accepted_date: updates.acceptanceDate }),
@@ -192,7 +192,7 @@ export default function AcceptedCases() {
 
     try {
       const token = sessionStorage.getItem('authToken');
-      const response = await fetch(`https://bot.primelegal.kz/api/cases/${caseId}`, {
+      const response = await fetch(`/api/cases/${caseId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,

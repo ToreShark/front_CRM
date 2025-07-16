@@ -35,7 +35,7 @@ export default function PendingCheckCases() {
     setLoading(true);
     try {
       const token = sessionStorage.getItem('authToken');
-      const response = await fetch('https://bot.primelegal.kz/api/cases/pending-check-full', {
+      const response = await fetch('/api/cases/pending-check-full', {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -86,7 +86,7 @@ export default function PendingCheckCases() {
           if (updates.hearingDate) acceptPayload.hearing_date = updates.hearingDate;
           
           requests.push(
-            fetch(`https://bot.primelegal.kz/api/cases/${caseId}/accept`, {
+            fetch(`/api/cases/${caseId}/accept`, {
               method: 'PATCH',
               headers,
               body: JSON.stringify(acceptPayload),
@@ -102,7 +102,7 @@ export default function PendingCheckCases() {
           }
           
           requests.push(
-            fetch(`https://bot.primelegal.kz/api/cases/${caseId}/status`, {
+            fetch(`/api/cases/${caseId}/status`, {
               method: 'PATCH',
               headers,
               body: JSON.stringify(returnPayload),
@@ -111,7 +111,7 @@ export default function PendingCheckCases() {
         } else {
           // Использовать обычный эндпоинт для других статусов
           requests.push(
-            fetch(`https://bot.primelegal.kz/api/cases/${caseId}/status`, {
+            fetch(`/api/cases/${caseId}/status`, {
               method: 'PATCH',
               headers,
               body: JSON.stringify({ status: updates.status }),
@@ -123,7 +123,7 @@ export default function PendingCheckCases() {
       // 2. Обновить дату заседания если она изменилась (только если статус не меняется на accepted)
       if (updates.hearingDate !== undefined && updates.status !== 'accepted') {
         requests.push(
-          fetch(`https://bot.primelegal.kz/api/cases/${caseId}/hearing`, {
+          fetch(`/api/cases/${caseId}/hearing`, {
             method: 'PATCH',
             headers,
             body: JSON.stringify({ hearing_date: updates.hearingDate }),
@@ -134,7 +134,7 @@ export default function PendingCheckCases() {
       // 3. Обновить дату принятия если она изменилась (только если статус не меняется на accepted)
       if (updates.acceptanceDate !== undefined && updates.status !== 'accepted') {
         requests.push(
-          fetch(`https://bot.primelegal.kz/api/cases/${caseId}/accepted-date`, {
+          fetch(`/api/cases/${caseId}/accepted-date`, {
             method: 'PATCH',
             headers,
             body: JSON.stringify({ accepted_date: updates.acceptanceDate }),
@@ -170,7 +170,7 @@ export default function PendingCheckCases() {
 
     try {
       const token = sessionStorage.getItem('authToken');
-      const response = await fetch(`https://bot.primelegal.kz/api/cases/${caseId}`, {
+      const response = await fetch(`/api/cases/${caseId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,

@@ -37,7 +37,7 @@ export default function SuccessContent() {
   }) => {
     try {
       const token = sessionStorage.getItem('authToken');
-      const response = await fetch('https://bot.primelegal.kz/api/cases', {
+      const response = await fetch('/api/cases', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

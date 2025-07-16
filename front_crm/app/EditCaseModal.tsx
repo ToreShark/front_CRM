@@ -97,7 +97,7 @@ export default function EditCaseModal({ case: caseItem, isOpen, onClose, onSave 
       return;
     }
     
-    const updates: any = {
+    const updates: { status: string; hearingDate?: string; acceptanceDate?: string; returnDate?: string } = {
       status,
     };
     

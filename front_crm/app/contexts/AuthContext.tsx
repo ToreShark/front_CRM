@@ -18,7 +18,7 @@ interface AuthContextType {
   user: User | null;
   token: string | null;
   loading: boolean;
-  login: (telegramData: any) => Promise<void>;
+  login: (telegramData: unknown) => Promise<void>;
   logout: () => void;
   checkAuth: () => Promise<void>;
 }
@@ -55,7 +55,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setToken(savedToken);
         
         // Проверяем валидность токена
-        const response = await fetch('https://bot.primelegal.kz/api/auth/me', {
+        const response = await fetch('/api/auth/me', {
           headers: {
             'Authorization': `Bearer ${savedToken}`
           }
@@ -77,9 +77,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const login = async (telegramData: any) => {
+  const login = async (telegramData: unknown) => {
     try {
-      const response = await fetch('https://bot.primelegal.kz/api/auth/telegram', {
+      const response = await fetch('/api/auth/telegram', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

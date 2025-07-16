@@ -15,7 +15,7 @@ interface TelegramUser {
 
 declare global {
   interface Window {
-    onTelegramAuth: (user: TelegramUser) => void;
+    onTelegramAuth?: (user: TelegramUser) => void;
   }
 }
 
@@ -55,7 +55,9 @@ export default function TelegramLoginButton() {
         containerRef.current.removeChild(script);
       }
       // Удаляем глобальную функцию
-      delete window.onTelegramAuth;
+      if (window.onTelegramAuth) {
+        delete window.onTelegramAuth;
+      }
     };
   }, [login]);
 

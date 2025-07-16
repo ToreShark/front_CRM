@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'https://bot.primelegal.kz/api';
+const API_BASE_URL = '/api';
 
 // Создаем экземпляр axios
 const axiosInstance = axios.create({
