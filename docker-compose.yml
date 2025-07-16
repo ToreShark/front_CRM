@@ -13,16 +13,8 @@ services:
     volumes:
       - ./logs:/var/log/nginx
     networks:
-      - lawyer-network  # ← Измените на lawyer-network
-    depends_on:
-      - api  # ← Добавьте зависимость
-
-  # Раскомментируйте API секцию или используйте external network
-  api:
-    external_name: legal-system-api
-    networks:
       - lawyer-network
 
 networks:
   lawyer-network:
-    external: true  # ← Используем существующую сеть от API
+    external: true
