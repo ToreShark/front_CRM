@@ -75,7 +75,7 @@ export default function AcceptedCases() {
     fetchCases();
   }, []);
 
-  const updateCaseStatus = async (caseId: number, updates: { status: string; hearingDate?: string; acceptanceDate?: string; returnDate?: string }) => {
+  const updateCaseStatus = async (caseId: number, updates: { status: string; hearingDate?: string; acceptanceDate?: string; returnDate?: string; decisionDate?: string }) => {
     try {
       const token = sessionStorage.getItem('authToken');
       const headers = {
@@ -125,18 +125,27 @@ export default function AcceptedCases() {
           );
         } else {
           // Использовать обычный эндпоинт для других статусов
+          const statusPayload: Record<string, string> = {
+            status: updates.status
+          };
+          
+          // Для статуса decision_made добавляем дату решения
+          if (updates.status === 'decision_made' && updates.decisionDate) {
+            statusPayload.decision_date = updates.decisionDate;
+          }
+          
           requests.push(
             fetch(`/api/cases/${caseId}/status`, {
               method: 'PATCH',
               headers,
-              body: JSON.stringify({ status: updates.status }),
+              body: JSON.stringify(statusPayload),
             })
           );
         }
       }
 
-      // 2. Обновить дату заседания если она изменилась (только если статус не меняется на accepted)
-      if (updates.hearingDate !== undefined && updates.status !== 'accepted') {
+      // 2. Обновить дату заседания если она изменилась (только если статус не меняется на accepted или decision_made)
+      if (updates.hearingDate !== undefined && updates.status !== 'accepted' && updates.status !== 'decision_made') {
         const currentHearingDate = currentCase.hearing_date;
         if (updates.hearingDate !== currentHearingDate) {
           requests.push(
