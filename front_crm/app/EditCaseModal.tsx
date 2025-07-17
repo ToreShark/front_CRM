@@ -55,7 +55,7 @@ function getAvailableStatuses(currentStatus: string) {
     'accepted': ['decision_made', 'closed', 'returned'],
     'decision_made': ['appeal', 'closed'],
     'returned': ['appeal', 'closed', 'submitted'],
-    'appeal': ['closed'],
+    'appeal': ['accepted', 'closed'],
     'closed': []
   };
 

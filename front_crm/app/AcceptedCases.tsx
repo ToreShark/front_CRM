@@ -149,8 +149,11 @@ export default function AcceptedCases() {
         }
       }
 
-      // 2. Обновить дату заседания если она изменилась (только если статус не меняется на accepted или decision_made)
-      if (updates.hearingDate !== undefined && updates.status !== 'accepted' && updates.status !== 'decision_made') {
+      // 2. Обновить дату заседания если она изменилась
+      // Исключаем только случаи, когда статус меняется на accepted или decision_made (эти эндпоинты сами устанавливают даты)
+      if (updates.hearingDate !== undefined && 
+          !(updates.status === 'accepted' && updates.status !== currentCase.status) &&
+          !(updates.status === 'decision_made' && updates.status !== currentCase.status)) {
         const currentHearingDate = currentCase.hearing_date;
         if (updates.hearingDate !== currentHearingDate) {
           requests.push(

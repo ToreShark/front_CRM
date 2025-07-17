@@ -84,17 +84,33 @@ export default function AppealCases() {
 
       // Обновить статус если он изменился
       if (updates.status !== currentCase.status) {
-        requests.push(
-          fetch(`/api/cases/${caseId}/status`, {
-            method: 'PATCH',
-            headers,
-            body: JSON.stringify({ status: updates.status }),
-          })
-        );
+        if (updates.status === 'accepted') {
+          // Для перехода в статус "accepted" используем эндпоинт /accept
+          const acceptPayload: Record<string, string> = {};
+          if (updates.acceptanceDate) acceptPayload.accepted_date = updates.acceptanceDate;
+          if (updates.hearingDate) acceptPayload.hearing_date = updates.hearingDate;
+          
+          requests.push(
+            fetch(`/api/cases/${caseId}/accept`, {
+              method: 'PATCH',
+              headers,
+              body: JSON.stringify(acceptPayload),
+            })
+          );
+        } else {
+          // Для других статусов используем обычный эндпоинт
+          requests.push(
+            fetch(`/api/cases/${caseId}/status`, {
+              method: 'PATCH',
+              headers,
+              body: JSON.stringify({ status: updates.status }),
+            })
+          );
+        }
       }
 
-      // Обновить дату заседания если она изменилась
-      if (updates.hearingDate !== undefined) {
+      // Обновить дату заседания если она изменилась (только если статус не меняется на accepted)
+      if (updates.hearingDate !== undefined && updates.status !== 'accepted') {
         requests.push(
           fetch(`/api/cases/${caseId}/hearing`, {
             method: 'PATCH',
@@ -113,6 +129,20 @@ export default function AppealCases() {
               method: 'PATCH',
               headers,
               body: JSON.stringify({ appeal_hearing_date: updates.appealHearingDate }),
+            })
+          );
+        }
+      }
+
+      // Обновить дату принятия дела если она изменилась (только если статус не меняется на accepted)
+      if (updates.acceptanceDate !== undefined && updates.status !== 'accepted') {
+        const currentAcceptanceDate = currentCase.accepted_date?.split('T')[0];
+        if (updates.acceptanceDate !== currentAcceptanceDate) {
+          requests.push(
+            fetch(`/api/cases/${caseId}/accepted-date`, {
+              method: 'PATCH',
+              headers,
+              body: JSON.stringify({ accepted_date: updates.acceptanceDate }),
             })
           );
         }
