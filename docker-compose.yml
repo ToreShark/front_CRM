@@ -13,8 +13,8 @@ services:
     volumes:
       - ./logs:/var/log/nginx
     networks:
-      - lawyer-network
+      - lawyer_crm_lawyer-network
 
 networks:
-  lawyer-network:
+  lawyer_crm_lawyer-network:
     external: true
