@@ -8,6 +8,7 @@ import PendingCheckCases from '../PendingCheckCases';
 import AcceptedCases from '../AcceptedCases';
 import ReturnedCases from '../ReturnedCases';
 import DecisionMadeCases from '../DecisionMadeCases';
+import AppealCases from '../components/AppealCases';
 import CreateCaseModal from '../CreateCaseModal';
 
 export default function SuccessContent() {
@@ -15,7 +16,7 @@ export default function SuccessContent() {
   const { user, logout, loading } = useAuth();
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
-  const [activeView, setActiveView] = useState<'submitted' | 'pending_check' | 'accepted' | 'returned' | 'decision_made'>('submitted');
+  const [activeView, setActiveView] = useState<'submitted' | 'pending_check' | 'accepted' | 'returned' | 'decision_made' | 'appeal'>('submitted');
 
   useEffect(() => {
     // Если пользователь не авторизован, перенаправляем на главную
@@ -141,6 +142,16 @@ export default function SuccessContent() {
             >
               Решение принято
             </button>
+            <button
+              onClick={() => setActiveView('appeal')}
+              className={`px-6 py-3 font-medium rounded-lg transition-colors ${
+                activeView === 'appeal'
+                  ? 'bg-red-500 text-white'
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              }`}
+            >
+              Апелляция
+            </button>
           </div>
         </div>
         
@@ -152,8 +163,10 @@ export default function SuccessContent() {
           <AcceptedCases key={refreshKey} />
         ) : activeView === 'returned' ? (
           <ReturnedCases key={refreshKey} />
-        ) : (
+        ) : activeView === 'decision_made' ? (
           <DecisionMadeCases key={refreshKey} />
+        ) : (
+          <AppealCases key={refreshKey} />
         )}
         
         <CreateCaseModal
