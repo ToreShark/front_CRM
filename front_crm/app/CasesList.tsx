@@ -75,7 +75,7 @@ export default function CasesList() {
     fetchCases();
   }, []);
 
-  const updateCaseStatus = async (caseId: number, updates: { status: string; hearingDate?: string; acceptanceDate?: string; returnDate?: string }) => {
+  const updateCaseStatus = async (caseId: number, updates: { status: string; hearingDate?: string; acceptanceDate?: string; returnDate?: string; decisionDate?: string; appealHearingDate?: string }) => {
     try {
       const token = sessionStorage.getItem('authToken');
       const headers = {
@@ -121,6 +121,22 @@ export default function CasesList() {
               method: 'PATCH',
               headers,
               body: JSON.stringify(returnPayload),
+            })
+          );
+        } else if (updates.status === 'appeal') {
+          // Для статуса appeal добавляем дату апелляционного заседания
+          const statusPayload: Record<string, string> = {
+            'status': 'appeal'
+          };
+          if (updates.appealHearingDate) {
+            statusPayload.appeal_hearing_date = updates.appealHearingDate;
+          }
+          
+          requests.push(
+            fetch(`/api/cases/${caseId}/status`, {
+              method: 'PATCH',
+              headers,
+              body: JSON.stringify(statusPayload),
             })
           );
         } else {

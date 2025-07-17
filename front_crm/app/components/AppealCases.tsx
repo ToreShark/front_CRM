@@ -66,7 +66,7 @@ export default function AppealCases() {
     fetchCases();
   }, []);
 
-  const updateCaseStatus = async (caseId: number, updates: { status: string; hearingDate?: string; acceptanceDate?: string; returnDate?: string }) => {
+  const updateCaseStatus = async (caseId: number, updates: { status: string; hearingDate?: string; acceptanceDate?: string; returnDate?: string; decisionDate?: string; appealHearingDate?: string }) => {
     try {
       const token = sessionStorage.getItem('authToken');
       const headers = {
@@ -102,6 +102,20 @@ export default function AppealCases() {
             body: JSON.stringify({ hearing_date: updates.hearingDate }),
           })
         );
+      }
+
+      // Обновить дату апелляционного заседания если она изменилась
+      if (updates.appealHearingDate !== undefined) {
+        const currentAppealHearingDate = currentCase.appeal_hearing_date;
+        if (updates.appealHearingDate !== currentAppealHearingDate) {
+          requests.push(
+            fetch(`/api/cases/${caseId}/appeal-hearing`, {
+              method: 'PATCH',
+              headers,
+              body: JSON.stringify({ appeal_hearing_date: updates.appealHearingDate }),
+            })
+          );
+        }
       }
 
       // Выполнить все необходимые запросы

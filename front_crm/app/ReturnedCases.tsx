@@ -77,7 +77,7 @@ export default function ReturnedCases() {
     fetchCases();
   }, []);
 
-  const updateCaseStatus = async (caseId: number, updates: { status: string; hearingDate?: string; acceptanceDate?: string; returnDate?: string }) => {
+  const updateCaseStatus = async (caseId: number, updates: { status: string; hearingDate?: string; acceptanceDate?: string; returnDate?: string; decisionDate?: string; appealHearingDate?: string }) => {
     try {
       const token = sessionStorage.getItem('authToken');
       const headers = {
@@ -125,6 +125,22 @@ export default function ReturnedCases() {
               body: JSON.stringify(returnPayload),
             })
           );
+        } else if (updates.status === 'appeal') {
+          // Для статуса appeal добавляем дату апелляционного заседания
+          const statusPayload: Record<string, string> = {
+            'status': 'appeal'
+          };
+          if (updates.appealHearingDate) {
+            statusPayload.appeal_hearing_date = updates.appealHearingDate;
+          }
+          
+          requests.push(
+            fetch(`/api/cases/${caseId}/status`, {
+              method: 'PATCH',
+              headers,
+              body: JSON.stringify(statusPayload),
+            })
+          );
         } else {
           // Использовать обычный эндпоинт для других статусов
           requests.push(
@@ -137,6 +153,20 @@ export default function ReturnedCases() {
         }
       }
 
+      // Для дел со статусом RETURNED - обновление даты возврата через отдельный эндпоинт
+      if (currentCase.status === 'returned' && updates.returnDate !== undefined) {
+        const currentReturnDate = currentCase.return_date?.split('T')[0];
+        if (updates.returnDate !== currentReturnDate) {
+          requests.push(
+            fetch(`/api/cases/${caseId}/return-date`, {
+              method: 'PATCH',
+              headers,
+              body: JSON.stringify({ return_date: updates.returnDate }),
+            })
+          );
+        }
+      }
+      
       // Для возвращенных дел: используем /cases/:id/accept для обновления даты заседания
       if (updates.status !== 'accepted' && currentCase.status === 'returned') {
         // Для дел со статусом RETURNED используем /cases/:id/accept

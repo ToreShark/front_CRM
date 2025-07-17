@@ -45,7 +45,7 @@ interface EditCaseModalProps {
   case: Case;
   isOpen: boolean;
   onClose: () => void;
-  onSave: (caseId: number, updates: { status: string; hearingDate?: string; acceptanceDate?: string; returnDate?: string; decisionDate?: string }) => void;
+  onSave: (caseId: number, updates: { status: string; hearingDate?: string; acceptanceDate?: string; returnDate?: string; decisionDate?: string; appealHearingDate?: string }) => void;
 }
 
 function getAvailableStatuses(currentStatus: string) {
@@ -83,6 +83,12 @@ export default function EditCaseModal({ case: caseItem, isOpen, onClose, onSave 
   const [acceptanceDate, setAcceptanceDate] = useState(
     caseItem.accepted_date ? caseItem.accepted_date.split('T')[0] : ''
   );
+  const [appealHearingDate, setAppealHearingDate] = useState(
+    caseItem.appeal_hearing_date ? caseItem.appeal_hearing_date.split('T')[0] : ''
+  );
+  const [appealHearingTime, setAppealHearingTime] = useState(
+    caseItem.appeal_hearing_date ? caseItem.appeal_hearing_date.split('T')[1]?.substring(0, 5) || '' : ''
+  );
 
   const handleStatusChange = (newStatus: string) => {
     setStatus(newStatus);
@@ -95,6 +101,11 @@ export default function EditCaseModal({ case: caseItem, isOpen, onClose, onSave 
     if (newStatus === 'decision_made' && !hearingDate) {
       const today = new Date().toISOString().split('T')[0];
       setHearingDate(today);
+    }
+    // Очистить поля апелляции при смене статуса на не-апелляцию
+    if (newStatus !== 'appeal') {
+      setAppealHearingDate('');
+      setAppealHearingTime('');
     }
   };
 
@@ -109,7 +120,7 @@ export default function EditCaseModal({ case: caseItem, isOpen, onClose, onSave 
       return;
     }
     
-    const updates: { status: string; hearingDate?: string; acceptanceDate?: string; returnDate?: string; decisionDate?: string } = {
+    const updates: { status: string; hearingDate?: string; acceptanceDate?: string; returnDate?: string; decisionDate?: string; appealHearingDate?: string } = {
       status,
     };
     
@@ -122,6 +133,11 @@ export default function EditCaseModal({ case: caseItem, isOpen, onClose, onSave 
       // Для статуса "decision_made" отправляем дату решения
       if (hearingDate) {
         updates.decisionDate = hearingDate;
+      }
+    } else if (status === 'appeal') {
+      // Для статуса "appeal" отправляем дату апелляционного заседания
+      if (appealHearingDate && appealHearingTime) {
+        updates.appealHearingDate = `${appealHearingDate}T${appealHearingTime}`;
       }
     } else {
       // Для других статусов отправляем дату заседания
@@ -171,30 +187,61 @@ export default function EditCaseModal({ case: caseItem, isOpen, onClose, onSave 
             </select>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              {status === 'returned' ? 'Дата возврата' : status === 'decision_made' ? 'Дата решения' : 'Дата заседания'}
-            </label>
-            <input
-              type="date"
-              value={hearingDate}
-              onChange={(e) => setHearingDate(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
+          {status !== 'appeal' && (
+            <>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  {status === 'returned' ? 'Дата возврата' : status === 'decision_made' ? 'Дата решения' : 'Дата заседания'}
+                </label>
+                <input
+                  type="date"
+                  value={hearingDate}
+                  onChange={(e) => setHearingDate(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
 
-          {status !== 'returned' && status !== 'decision_made' && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Время заседания
-              </label>
-              <input
-                type="time"
-                value={hearingTime}
-                onChange={(e) => setHearingTime(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
+              {status !== 'returned' && status !== 'decision_made' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Время заседания
+                  </label>
+                  <input
+                    type="time"
+                    value={hearingTime}
+                    onChange={(e) => setHearingTime(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+              )}
+            </>
+          )}
+
+          {status === 'appeal' && (
+            <>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Дата апелляционного заседания
+                </label>
+                <input
+                  type="date"
+                  value={appealHearingDate}
+                  onChange={(e) => setAppealHearingDate(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Время апелляционного заседания
+                </label>
+                <input
+                  type="time"
+                  value={appealHearingTime}
+                  onChange={(e) => setAppealHearingTime(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+            </>
           )}
 
           <div>
