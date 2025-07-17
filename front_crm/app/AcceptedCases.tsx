@@ -75,7 +75,7 @@ export default function AcceptedCases() {
     fetchCases();
   }, []);
 
-  const updateCaseStatus = async (caseId: number, updates: { status: string; hearingDate?: string; acceptanceDate?: string; returnDate?: string; decisionDate?: string }) => {
+  const updateCaseStatus = async (caseId: number, updates: { status: string; hearingDate?: string; acceptanceDate?: string; returnDate?: string; decisionDate?: string; appealHearingDate?: string }) => {
     try {
       const token = sessionStorage.getItem('authToken');
       const headers = {
@@ -134,6 +134,11 @@ export default function AcceptedCases() {
             statusPayload.decision_date = updates.decisionDate;
           }
           
+          // Для статуса appeal добавляем дату апелляционного заседания
+          if (updates.status === 'appeal' && updates.appealHearingDate) {
+            statusPayload.appeal_hearing_date = updates.appealHearingDate;
+          }
+          
           requests.push(
             fetch(`/api/cases/${caseId}/status`, {
               method: 'PATCH',
@@ -144,8 +149,11 @@ export default function AcceptedCases() {
         }
       }
 
-      // 2. Обновить дату заседания если она изменилась (только если статус не меняется на accepted или decision_made)
-      if (updates.hearingDate !== undefined && updates.status !== 'accepted' && updates.status !== 'decision_made') {
+      // 2. Обновить дату заседания если она изменилась
+      // Исключаем только случаи, когда статус меняется на accepted или decision_made (эти эндпоинты сами устанавливают даты)
+      if (updates.hearingDate !== undefined && 
+          !(updates.status === 'accepted' && updates.status !== currentCase.status) &&
+          !(updates.status === 'decision_made' && updates.status !== currentCase.status)) {
         const currentHearingDate = currentCase.hearing_date;
         if (updates.hearingDate !== currentHearingDate) {
           requests.push(
